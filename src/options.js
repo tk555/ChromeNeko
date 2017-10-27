@@ -1,4 +1,3 @@
-/// <reference path="../typings/index.d.ts" />
 var select = document.getElementById("select");
 var input = document.getElementById("input");
 var urlArray = [];

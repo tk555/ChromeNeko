@@ -1,6 +1,6 @@
 {
   "name": "Chrome Neko",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "manifest_version": 2,
   "description": "The program chrome neko creates a cute cat.",
   "content_scripts": [
@@ -13,7 +13,7 @@
       ]
     }
   ],
-  "options_page":"index.html",
+  "options_page":"html/index/index.html",
   "web_accessible_resources": [
     "src/oneko.js",
     "img/*.png"

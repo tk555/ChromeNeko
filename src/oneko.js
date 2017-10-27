@@ -1,4 +1,3 @@
-/// <reference path="../typings/index.d.ts" />
 var Oneko = (function () {
     function Oneko(color, size) {
         this.mouseX = 0; //マウスのいち
