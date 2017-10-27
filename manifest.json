@@ -1,0 +1,29 @@
+{
+  "name": "Chrome Neko",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "The program chrome neko creates a cute cat.",
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/oneko.js"
+      ]
+    }
+  ],
+  "options_page":"index.html",
+  "web_accessible_resources": [
+    "src/oneko.js",
+    "img/*.png"
+  ],
+  "permissions": [
+    "tabs","<all_urls>","storage"
+  ],
+  "icons":{
+    "16":"img/awake.png",
+    "48":"img/awake.png",
+    "128":"img/awake.png"
+  }
+}
