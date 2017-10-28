@@ -16,7 +16,6 @@ var Oneko = (function () {
         this.minDistance = 50; //猫の位置を動かす最小距離
         this.minDistanceofTogi = 1;
         this.minDistanceRoot = 50; //Math.pow(this.minDistance,1/2);
-        this.theta = 10 * (Math.PI / 180);
         this.currentDistance = 0; //マウス位置＋猫のズレと今の画像との距離
         this.nameArray = ["akubi1", "akubi2", "akubiL", "akubiR", "awake", "down1", "down2", "dtogi1", "dtogi2",
             "dwleft1", "dwleft2", "dwright1", "dwright2", "inleft1", "inleft2", "inright1", "inright2",
@@ -26,6 +25,7 @@ var Oneko = (function () {
         this.imgStyleArray = [];
         this.currentImg = 1;
         this.counter = 0;
+        this.canOccerMouseMove = true;
         //DOMに画像が読み込まれる
         var th = document.getElementsByTagName("body")[0];
         var d = document.createElement("div");
@@ -50,13 +50,16 @@ var Oneko = (function () {
     }
     Oneko.prototype.mouseMove = function (ev) {
         //マウスが動いたときに発生する処理
-        this.mouseX = ev.pageX;
-        this.mouseY = ev.pageY;
-        this.targetX = this.mouseX + this.catPositionX;
-        this.targetY = this.mouseY + this.catPositionY;
-        //console.log(ev.pageX,ev.pageY,document.body.scrollLeft,document.body.scrollTop);
-        //console.log(this.mouseX,this.mouseY,document.documentElement.clientWidth,document.documentElement.clientHeight);
-        //console.log(this.mouseY-window.scrollY);
+        if (this.canOccerMouseMove) {
+            this.mouseX = ev.pageX;
+            this.mouseY = ev.pageY;
+            this.targetX = this.mouseX + this.catPositionX;
+            this.targetY = this.mouseY + this.catPositionY;
+            //console.log(ev.pageX,ev.pageY,document.body.scrollLeft,document.body.scrollTop);
+            //console.log(this.mouseX,this.mouseY,document.documentElement.clientWidth,document.documentElement.clientHeight);
+            //console.log(this.mouseY-window.scrollY);
+            //console.log(this.imgX - window.scrollX, this.imgY - window.scrollY);
+        }
     };
     Oneko.prototype.mouseLeave = function (ev) {
         //マウスがウィンドウ外に出たときの処理
@@ -68,17 +71,20 @@ var Oneko = (function () {
     };
     Oneko.prototype.mainLoop = function () {
         var _this = this;
+        this.canOccerMouseMove = false;
         this.currentDistance = Math.sqrt(Math.pow(this.targetX - this.imgX, 2) + Math.pow(this.targetY - this.imgY, 2));
         var arrowX = this.targetX - this.imgX;
         var arrowY = this.targetY - this.imgY;
         this.dx = this.dr * (this.targetX - this.imgX) / this.currentDistance;
         this.dy = this.dr * (this.targetY - this.imgY) / this.currentDistance;
-        this.isNextPointOutofDocument = (this.imgX+this.dx) < 0 || (this.imgX+this.dx) > window.innerWidth || (this.imgY+this.dy) < 0 || (this.imgX+this.dy) > window.innerHeight;
+        this.isNextPointOutofDocument = (this.imgX + this.dx) < 0 || (this.imgX + this.dx) > window.innerWidth || (this.imgY + this.dy) < 0 || (this.imgX + this.dy) > window.innerHeight;
         if (this.currentDistance < this.minDistance) {
-            this.dx=0;
-            this.dy=0;
+            console.log("tikai");
+            this.dx = 0;
+            this.dy = 0;
             if (!this.isMouseOutofDocument) {
                 //マウスがブラウザ内にあってカーソルとの距離が近い
+                //猫は動かずdx,dy=0
                 this.counter++;
                 if (this.counter < 10) {
                     this.display("akubi");
@@ -88,65 +94,75 @@ var Oneko = (function () {
                 }
             } else {
                 //マウスがウィンドウの外にあり、かつカーソルが今指している位置（カーソルがウィンドウの外に出る直前に居た位置）と猫の位置が近い
-                var arr = [this.mouseY - window.scrollY, this.mouseX - window.scrollX, window.innerHeight - (this.mouseY - window.scrollY), document.body.clientWidth - (this.mouseX - window.scrollX)];
-                console.log(Math.min.apply(null,arr));
+                var arr = [this.imgY - window.scrollY, this.imgX - window.scrollX, window.innerHeight - 48 - (this.imgY - window.scrollY), document.body.clientWidth - 32 - (this.imgX - window.scrollX)];
                 console.log(arr);
-                console.log(arr.indexOf(Math.min.apply(null,arr)));
-                switch (arr.indexOf(Math.min.apply(null,arr))) {
+                switch (arr.indexOf(Math.min.apply(null, arr))) {
                     case 0:
                         this.display("utogi");
+                        if (Math.min.apply(null, arr) != 0) {
+                            this.dx = 0;
+                            this.dy = -arr[0];
+                        }
                         break;
                     case 1:
                         this.display("ltogi");
+                        if (Math.min.apply(null, arr) != 0) {
+                            this.dx = -arr[1];
+                            this.dy = 0;
+                        }
                         break;
                     case 2:
                         this.display("dtogi");
+                        if (Math.min.apply(null, arr) != 0) {
+                            this.dx = 0;
+                            this.dy = arr[2];
+                        }
                         break;
                     case 3:
                         this.display("rtogi");
+                        if (Math.min.apply(null, arr) != 0) {
+                            this.dx = arr[3];
+                            this.dy = 0;
+                        }
                         break;
                     default:
                         console.log("togi error");
                 }
             }
         } else {
-            this.counter = 0;
-            if (arrowX < -this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
-                this.display("upleft");
-            }
-            else if (Math.abs(arrowX) < this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
+            console.log("tooi");
+            var theta = Math.atan2(this.dx, this.dy);
+            if ((-Math.PI <= theta && theta <= -Math.PI *7/ 8)||(Math.PI*7/8<theta&&theta<=Math.PI)) {
                 this.display("up");
-            }
-            else if (arrowX > this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
+            } else if (-Math.PI *7/ 8 <= theta && theta < -Math.PI *5/ 8) {
+                this.display("upleft");
+            } else if (-Math.PI *5/ 8 <= theta && theta <- Math.PI*3  / 8) {
+                this.display("left");
+            } else if (-Math.PI *3/ 8 <= theta && theta < -Math.PI/8) {
+                this.display("dwleft");
+            } else if (-Math.PI/8 <= theta && theta < Math.PI / 8) {
+                this.display("down");
+            } else if (Math.PI  / 8 <= theta && theta < Math.PI *3 / 8) {
+                this.display("dwright");
+            } else if (Math.PI *3 / 8 <= theta && theta < Math.PI * 5 / 8) {
+                this.display("right");
+            } else {
                 this.display("upright");
             }
-            else if (arrowX < -this.minDistanceRoot && Math.abs(arrowY) < this.minDistanceRoot) {
-                this.display("left");
-            }
-            else if (Math.abs(arrowX) < this.minDistanceRoot && Math.abs(arrowY) < this.minDistanceRoot) {
-            }
-            else if (arrowX > this.minDistanceRoot && Math.abs(arrowY) < this.minDistanceRoot) {
-                this.display("right");
-            }
-            else if (arrowX < -this.minDistanceRoot && arrowY > this.minDistanceRoot) {
-                this.display("dwleft");
-            }
-            else if (Math.abs(arrowX) < this.minDistanceRoot && arrowY > this.minDistanceRoot) {
-                this.display("down");
-            }
-            else if (arrowX > this.minDistanceRoot && arrowY > this.minDistanceRoot) {
-                this.display("dwright");
-            }
+
+
         }
         this.imgX = this.imgX + this.dx;
         this.imgY = this.imgY + this.dy;
+        console.log("imgX", this.imgX, this.imgY);
         this.divStyle.left = this.imgX + "px";
         this.divStyle.top = this.imgY + "px";
-        console.log(this.divStyle.left, this.divStyle.top);
+        this.canOccerMouseMove = true;
         setTimeout(function () { _this.mainLoop(); }, 200);
     };
 
     Oneko.prototype.display = function (name) {
+        console.log(name);
         if (this.currentImg == 2) {
             this.currentImg = 1;
         }
