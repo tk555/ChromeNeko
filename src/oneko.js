@@ -94,7 +94,10 @@ var Oneko = (function () {
                 }
             } else {
                 //マウスがウィンドウの外にあり、かつカーソルが今指している位置（カーソルがウィンドウの外に出る直前に居た位置）と猫の位置が近い
-                var arr = [this.imgY - window.scrollY, this.imgX - window.scrollX, window.innerHeight - 48 - (this.imgY - window.scrollY), document.body.clientWidth - 32 - (this.imgX - window.scrollX)];
+                var arr = [this.imgY - window.scrollY,
+                this.imgX - window.scrollX,
+                window.innerHeight - (32+window.innerHeight-document.documentElement.clientHeight) - (this.imgY - window.scrollY),
+                document.body.clientWidth - (32+document.documentElement.clientWidth-document.body.clientWidth) - (this.imgX - window.scrollX)];
                 console.log(arr);
                 switch (arr.indexOf(Math.min.apply(null, arr))) {
                     case 0:
@@ -132,19 +135,19 @@ var Oneko = (function () {
         } else {
             console.log("tooi");
             var theta = Math.atan2(this.dx, this.dy);
-            if ((-Math.PI <= theta && theta <= -Math.PI *7/ 8)||(Math.PI*7/8<theta&&theta<=Math.PI)) {
+            if ((-Math.PI <= theta && theta <= -Math.PI * 7 / 8) || (Math.PI * 7 / 8 < theta && theta <= Math.PI)) {
                 this.display("up");
-            } else if (-Math.PI *7/ 8 <= theta && theta < -Math.PI *5/ 8) {
+            } else if (-Math.PI * 7 / 8 <= theta && theta < -Math.PI * 5 / 8) {
                 this.display("upleft");
-            } else if (-Math.PI *5/ 8 <= theta && theta <- Math.PI*3  / 8) {
+            } else if (-Math.PI * 5 / 8 <= theta && theta < - Math.PI * 3 / 8) {
                 this.display("left");
-            } else if (-Math.PI *3/ 8 <= theta && theta < -Math.PI/8) {
+            } else if (-Math.PI * 3 / 8 <= theta && theta < -Math.PI / 8) {
                 this.display("dwleft");
-            } else if (-Math.PI/8 <= theta && theta < Math.PI / 8) {
+            } else if (-Math.PI / 8 <= theta && theta < Math.PI / 8) {
                 this.display("down");
-            } else if (Math.PI  / 8 <= theta && theta < Math.PI *3 / 8) {
+            } else if (Math.PI / 8 <= theta && theta < Math.PI * 3 / 8) {
                 this.display("dwright");
-            } else if (Math.PI *3 / 8 <= theta && theta < Math.PI * 5 / 8) {
+            } else if (Math.PI * 3 / 8 <= theta && theta < Math.PI * 5 / 8) {
                 this.display("right");
             } else {
                 this.display("upright");
@@ -154,6 +157,18 @@ var Oneko = (function () {
         }
         this.imgX = this.imgX + this.dx;
         this.imgY = this.imgY + this.dy;
+        if(this.imgX<window.scrollX){
+            console.log("too min");
+            this.imgX=window.scrollX;
+        }else if(window.scrollX+document.body.clientWidth-32<this.imgX){
+            console.log("too many");
+            this.imgX=window.scrollX+document.body.clientWidth-32;
+        }
+        if(this.imgY<window.scrollY){
+            this.imgY=window.scrollY;
+        }else if(window.scrollY+document.documentElement.clientHeight-32<this.imgY){
+            this.imgY=window.scrollY+document.documentElement.clientHeight-32;
+        }
         console.log("imgX", this.imgX, this.imgY);
         this.divStyle.left = this.imgX + "px";
         this.divStyle.top = this.imgY + "px";
