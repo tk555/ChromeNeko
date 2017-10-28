@@ -8,11 +8,13 @@ var Oneko = (function () {
         this.targetY = 0;
         this.imgX = 0; //画像の場所
         this.imgY = 0;
-        this.dx = 20;//猫が進むスピード
-        this.dy = 20;
+        this.dx = 0;
+        this.dy = 0;
+        this.dr = 20;//猫がワンステップで進むデフォルト距離
         this.isMouseOutofDocument = false;
+        this.isNextPointOutofDocument = false;
         this.minDistance = 50; //猫の位置を動かす最小距離
-        this.minDistanceofTogi=1;
+        this.minDistanceofTogi = 1;
         this.minDistanceRoot = 50; //Math.pow(this.minDistance,1/2);
         this.theta = 10 * (Math.PI / 180);
         this.currentDistance = 0; //マウス位置＋猫のズレと今の画像との距離
@@ -48,30 +50,67 @@ var Oneko = (function () {
     }
     Oneko.prototype.mouseMove = function (ev) {
         //マウスが動いたときに発生する処理
-        //マウスの位置(mouseX,Y)と
-        //this.mouseX = ev.clientX + document.body.scrollLeft;
-        //this.mouseY = ev.clientY + document.body.scrollTop;
-        this.mouseX = ev.pageX - document.body.scrollLeft;
-        this.mouseY = ev.pageY - document.body.scrollTop;
+        this.mouseX = ev.pageX;
+        this.mouseY = ev.pageY;
         this.targetX = this.mouseX + this.catPositionX;
         this.targetY = this.mouseY + this.catPositionY;
-        //console.log(this.mouseX,this.mouseY);
+        //console.log(ev.pageX,ev.pageY,document.body.scrollLeft,document.body.scrollTop);
+        //console.log(this.mouseX,this.mouseY,document.documentElement.clientWidth,document.documentElement.clientHeight);
+        //console.log(this.mouseY-window.scrollY);
     };
-    Oneko.prototype.mouseLeave = function(ev){
-        this.isMouseOutofDocument=true;
+    Oneko.prototype.mouseLeave = function (ev) {
+        //マウスがウィンドウ外に出たときの処理
+        this.isMouseOutofDocument = true;
     };
-    Oneko.prototype.mouseEnter = function (ev){
-        this.isMouseOutofDocument=false;
+    Oneko.prototype.mouseEnter = function (ev) {
+        //マウスがウィンドウ内に入った時の処理
+        this.isMouseOutofDocument = false;
     };
     Oneko.prototype.mainLoop = function () {
         var _this = this;
-        //console.log(this.counter);
         this.currentDistance = Math.sqrt(Math.pow(this.targetX - this.imgX, 2) + Math.pow(this.targetY - this.imgY, 2));
-        if (this.currentDistance > this.minDistance) {
+        var arrowX = this.targetX - this.imgX;
+        var arrowY = this.targetY - this.imgY;
+        this.dx = this.dr * (this.targetX - this.imgX) / this.currentDistance;
+        this.dy = this.dr * (this.targetY - this.imgY) / this.currentDistance;
+        this.isNextPointOutofDocument = (this.imgX+this.dx) < 0 || (this.imgX+this.dx) > window.innerWidth || (this.imgY+this.dy) < 0 || (this.imgX+this.dy) > window.innerHeight;
+        if (this.currentDistance < this.minDistance) {
+            this.dx=0;
+            this.dy=0;
+            if (!this.isMouseOutofDocument) {
+                //マウスがブラウザ内にあってカーソルとの距離が近い
+                this.counter++;
+                if (this.counter < 10) {
+                    this.display("akubi");
+                }
+                else {
+                    this.display("sleep");
+                }
+            } else {
+                //マウスがウィンドウの外にあり、かつカーソルが今指している位置（カーソルがウィンドウの外に出る直前に居た位置）と猫の位置が近い
+                var arr = [this.mouseY - window.scrollY, this.mouseX - window.scrollX, window.innerHeight - (this.mouseY - window.scrollY), document.body.clientWidth - (this.mouseX - window.scrollX)];
+                console.log(Math.min.apply(null,arr));
+                console.log(arr);
+                console.log(arr.indexOf(Math.min.apply(null,arr)));
+                switch (arr.indexOf(Math.min.apply(null,arr))) {
+                    case 0:
+                        this.display("utogi");
+                        break;
+                    case 1:
+                        this.display("ltogi");
+                        break;
+                    case 2:
+                        this.display("dtogi");
+                        break;
+                    case 3:
+                        this.display("rtogi");
+                        break;
+                    default:
+                        console.log("togi error");
+                }
+            }
+        } else {
             this.counter = 0;
-            var arrowX = this.targetX - this.imgX;
-            var arrowY = this.targetY - this.imgY;
-            //console.log(arrowX, arrowY);
             if (arrowX < -this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
                 this.display("upleft");
             }
@@ -98,83 +137,15 @@ var Oneko = (function () {
             else if (arrowX > this.minDistanceRoot && arrowY > this.minDistanceRoot) {
                 this.display("dwright");
             }
-            this.currentDistance = Math.sqrt(Math.pow(this.targetX - this.imgX, 2) + Math.pow(this.targetY - this.imgY, 2));
-            this.imgX += this.dx * (this.targetX - this.imgX) / this.currentDistance;
-            this.imgY += this.dy * (this.targetY - this.imgY) / this.currentDistance;
-            this.divStyle.left = Math.min((this.imgX),window.innerWidth-50) + "px";
-            this.divStyle.top = Math.min((this.imgY),document.body.clientHeight-50)+ "px";
-            console.log(this.divStyle.left,this.divStyle.top);
         }
-        else {
-            //あくびとか眠るとかの処理
-            if(this.isMouseOutofDocument){
-                console.log("isMouseOutofDocument");
-                if(this.mouseX<window.innerWidth/2){
-                    this.targetX=3;
-                }else{
-                    this.targetX=window.innerWidth-50;
-                }
-                if(this.currentDistance>this.minDistance){
-                    this.imgX += this.dx * (this.targetX - this.imgX) / this.currentDistance;
-                    this.imgY += this.dy * (this.targetY - this.imgY) / this.currentDistance;
-                    var arrowX = this.targetX - this.imgX;
-                    var arrowY = this.targetY - this.imgY;
-                    //console.log(arrowX, arrowY);
-                    if (arrowX < -this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
-                        this.display("upleft");
-                    }
-                    else if (Math.abs(arrowX) < this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
-                        this.display("up");
-                    }
-                    else if (arrowX > this.minDistanceRoot && arrowY < -this.minDistanceRoot) {
-                        this.display("upright");
-                    }
-                    else if (arrowX < -this.minDistanceRoot && Math.abs(arrowY) < this.minDistanceRoot) {
-                        this.display("left");
-                    }
-                    else if (Math.abs(arrowX) < this.minDistanceRoot && Math.abs(arrowY) < this.minDistanceRoot) {
-                    }
-                    else if (arrowX > this.minDistanceRoot && Math.abs(arrowY) < this.minDistanceRoot) {
-                        this.display("right");
-                    }
-                    else if (arrowX < -this.minDistanceRoot && arrowY > this.minDistanceRoot) {
-                        this.display("dwleft");
-                    }
-                    else if (Math.abs(arrowX) < this.minDistanceRoot && arrowY > this.minDistanceRoot) {
-                        this.display("down");
-                    }
-                    else if (arrowX > this.minDistanceRoot && arrowY > this.minDistanceRoot) {
-                        this.display("dwright");
-                    }
-                    this.divStyle.left = (this.imgX) + "px";
-                    this.divStyle.top = (this.imgY) + "px";
-                }else{
-                    console.log("togi");
-                    this.imgX=this.targetX;
-                    this.imgY=this.targetY+this.catPositionY;
-                    this.divStyle.left = (this.imgX) + "px";
-                    this.divStyle.top = (this.imgY) + "px";
-                    if(this.mouseX<window.innerWidth/2){
-                        this.display("ltogi");
-                    }else{
-                        this.display("rtogi");
-                    }
-                }
-                this.currentDistance = Math.sqrt(Math.pow(this.targetX - this.imgX, 2) + Math.pow(this.targetY - this.imgY, 2));
-                
-                
-            }else{
-                this.counter++;
-                if (this.counter < 10) {
-                    this.display("akubi");
-                }
-                else {
-                    this.display("sleep");
-                }
-            }
-        }
+        this.imgX = this.imgX + this.dx;
+        this.imgY = this.imgY + this.dy;
+        this.divStyle.left = this.imgX + "px";
+        this.divStyle.top = this.imgY + "px";
+        console.log(this.divStyle.left, this.divStyle.top);
         setTimeout(function () { _this.mainLoop(); }, 200);
     };
+
     Oneko.prototype.display = function (name) {
         if (this.currentImg == 2) {
             this.currentImg = 1;
@@ -200,9 +171,9 @@ for (var i = 0; i < localStorage.length; i++) {
 }
 var oneko = new Oneko("white", 1);
 var mouseMoveHandler = oneko.mouseMove.bind(oneko);
-var mouseLeaveHandler=oneko.mouseLeave.bind(oneko);
-var mouseEnterHandler=oneko.mouseEnter.bind(oneko);
+var mouseLeaveHandler = oneko.mouseLeave.bind(oneko);
+var mouseEnterHandler = oneko.mouseEnter.bind(oneko);
 document.addEventListener("mousemove", mouseMoveHandler);
-document.addEventListener("mouseleave",mouseLeaveHandler);
-document.addEventListener("mouseenter",mouseEnterHandler);
+document.addEventListener("mouseleave", mouseLeaveHandler);
+document.addEventListener("mouseenter", mouseEnterHandler);
 oneko.mainLoop();
