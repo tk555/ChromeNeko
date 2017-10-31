@@ -7,9 +7,12 @@ input{
 .button{
     margin-right:auto;
 }
+#title{
+}
 p1{
     font-size:40px;
     font-weight:bold;
+    margin: auto;
 }
 .center{
     font-size:20px;

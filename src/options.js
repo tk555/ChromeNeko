@@ -2,17 +2,23 @@ var select = document.getElementById("select");
 var input = document.getElementById("input");
 var urlArray = [];
 function load() {
-    urlArray = chrome.storage.local.get("urlArray", function () { });
-    if (urlArray == null) {
-        chrome.storage.local.set({ "urlArray": [] }, function () { });
-        urlArray = [];
-    }
-    for (var i = 0; i < urlArray.length; i++) {
-        var url = urlArray[i];
-        var urlElement = document.createElement("option");
-        urlElement.appendChild(document.createTextNode(url));
-        select.appendChild(urlElement);
-    }
+    chrome.storage.sync.get("urlArray", function (s) {
+        urlArray = s.urlArray;
+        console.log("load ", s);
+        if (s == null) {
+            chrome.storage.sync.set({ "urlArray": [] }, function () { });
+        }
+        for (var i = 0; i < s.urlArray.length; i++) {
+            var url = s.urlArray[i];
+            var urlElement = document.createElement("option");
+            console.log(url, urlElement);
+            urlElement.appendChild(document.createTextNode(url));
+            select.appendChild(urlElement);
+        }
+    });
+
+    document.getElementById("add").addEventListener("click", add);
+    document.getElementById("remove").addEventListener("click", remove);
 }
 function add() {
     if (input.value != "") {
@@ -22,8 +28,9 @@ function add() {
         op.appendChild(document.createTextNode(input.value));
         select.appendChild(op);
         input.value = "";
-        console.log(urlArray);
-        chrome.storage.local.set({ "urlArray": urlArray }, function () { });
+        chrome.storage.sync.set({ "urlArray": urlArray }, function () {
+            console.log("urlArray set ", urlArray);
+        });
     }
     else {
         alert("input url");
@@ -39,15 +46,13 @@ function remove() {
             if (i == index) {
                 //localStorage.removeItem((<HTMLSelectElement>select)[i].value);
                 urlArray.splice(i, 1);
-                chrome.storage.local.set({ "urlArray": urlArray }, function () { });
+                chrome.storage.sync.set({ "urlArray": urlArray }, function () { });
                 select[i].remove();
-                var str = chrome.storage.local.get("urlArray", function () {
-                    console.log(str);
+                chrome.storage.sync.get("urlArray", function (newUrlArray) {
+                    console.log(newUrlArray);
                 });
             }
         }
     }
 }
 window.addEventListener("load", load);
-document.getElementById("add").addEventListener("click", add);
-document.getElementById("remove").addEventListener("click", remove);

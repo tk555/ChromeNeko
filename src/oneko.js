@@ -96,8 +96,8 @@ var Oneko = (function () {
                 //マウスがウィンドウの外にあり、かつカーソルが今指している位置（カーソルがウィンドウの外に出る直前に居た位置）と猫の位置が近い
                 var arr = [this.imgY - window.scrollY,
                 this.imgX - window.scrollX,
-                window.innerHeight - (32+window.innerHeight-document.documentElement.clientHeight) - (this.imgY - window.scrollY),
-                document.body.clientWidth - (32+document.documentElement.clientWidth-document.body.clientWidth) - (this.imgX - window.scrollX)];
+                window.innerHeight - (32 + window.innerHeight - document.documentElement.clientHeight) - (this.imgY - window.scrollY),
+                document.body.clientWidth - (32 + document.documentElement.clientWidth - document.body.clientWidth) - (this.imgX - window.scrollX)];
                 console.log(arr);
                 switch (arr.indexOf(Math.min.apply(null, arr))) {
                     case 0:
@@ -157,17 +157,17 @@ var Oneko = (function () {
         }
         this.imgX = this.imgX + this.dx;
         this.imgY = this.imgY + this.dy;
-        if(this.imgX<window.scrollX){
+        if (this.imgX < window.scrollX) {
             console.log("too min");
-            this.imgX=window.scrollX;
-        }else if(window.scrollX+document.body.clientWidth-32<this.imgX){
+            this.imgX = window.scrollX;
+        } else if (window.scrollX + document.body.clientWidth - 32 < this.imgX) {
             console.log("too many");
-            this.imgX=window.scrollX+document.body.clientWidth-32;
+            this.imgX = window.scrollX + document.body.clientWidth - 32;
         }
-        if(this.imgY<window.scrollY){
-            this.imgY=window.scrollY;
-        }else if(window.scrollY+document.documentElement.clientHeight-32<this.imgY){
-            this.imgY=window.scrollY+document.documentElement.clientHeight-32;
+        if (this.imgY < window.scrollY) {
+            this.imgY = window.scrollY;
+        } else if (window.scrollY + document.documentElement.clientHeight - 32 < this.imgY) {
+            this.imgY = window.scrollY + document.documentElement.clientHeight - 32;
         }
         console.log("imgX", this.imgX, this.imgY);
         this.divStyle.left = this.imgX + "px";
@@ -197,14 +197,29 @@ var Oneko = (function () {
     };
     return Oneko;
 }());
-for (var i = 0; i < localStorage.length; i++) {
-    console.log(localStorage.key(i));
-}
-var oneko = new Oneko("white", 1);
-var mouseMoveHandler = oneko.mouseMove.bind(oneko);
-var mouseLeaveHandler = oneko.mouseLeave.bind(oneko);
-var mouseEnterHandler = oneko.mouseEnter.bind(oneko);
-document.addEventListener("mousemove", mouseMoveHandler);
-document.addEventListener("mouseleave", mouseLeaveHandler);
-document.addEventListener("mouseenter", mouseEnterHandler);
-oneko.mainLoop();
+
+var mainloop_chromeNeko = function () {
+    var oneko = new Oneko("white", 1);
+    var mouseMoveHandler = oneko.mouseMove.bind(oneko);
+    var mouseLeaveHandler = oneko.mouseLeave.bind(oneko);
+    var mouseEnterHandler = oneko.mouseEnter.bind(oneko);
+    document.addEventListener("mousemove", mouseMoveHandler);
+    document.addEventListener("mouseleave", mouseLeaveHandler);
+    document.addEventListener("mouseenter", mouseEnterHandler);
+    oneko.mainLoop();
+};
+
+chrome.storage.sync.get(["urlArray"], function (a) {
+    var urlArray = a.urlArray;
+    var currentUrl_chromeNeko = location.href;
+    var canMainLoop = true;
+    urlArray.forEach(function (element) {
+        var re_chromeNeko = new RegExp("^https?://"+element.replace(/\*/g, ".*")+"$");
+        console.log(re_chromeNeko);
+        console.log(currentUrl_chromeNeko, element, currentUrl_chromeNeko.match(re_chromeNeko));
+        canMainLoop = canMainLoop && !currentUrl_chromeNeko.match(re_chromeNeko);
+        console.log(canMainLoop);
+    }, this);
+    if(canMainLoop) mainloop_chromeNeko();
+});
+
