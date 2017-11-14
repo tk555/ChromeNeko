@@ -9,6 +9,22 @@ input{
 }
 #title{
 }
+#example{
+    background-color: #eeeeee;
+    
+}
+ul{
+    font-size: 13px;
+}
+p2{
+    float: left;
+}
+p3{
+    float: right;
+}
+iframe{
+    margin-left:auto;
+}
 p1{
     font-size:40px;
     font-weight:bold;
