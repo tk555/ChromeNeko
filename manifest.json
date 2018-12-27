@@ -1,6 +1,6 @@
 {
   "name": "Chrome Neko",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "manifest_version": 2,
   "description": "The program chrome neko creates a cute cat.",
   "content_scripts": [

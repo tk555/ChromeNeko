@@ -1,4 +1,4 @@
-var Oneko = (function () {
+let Oneko = (function () {
     function Oneko(color, size) {
         this.mouseX = 0; //マウスのいち
         this.mouseY = 0;
@@ -27,13 +27,13 @@ var Oneko = (function () {
         this.counter = 0;
         this.canOccerMouseMove = true;
         //DOMに画像が読み込まれる
-        var th = document.getElementsByTagName("body")[0];
-        var d = document.createElement("div");
-        var imgArray = [];
+        let th = document.getElementsByTagName("body")[0];
+        let d = document.createElement("div");
+        let imgArray = [];
         d.setAttribute("id", "cursor");
         d.setAttribute("style", "position:absolute; top:0px; left:0px; !important");
-        for (var i = 0; i < this.nameArray.length; i++) {
-            var img = document.createElement("img");
+        for (let i = 0; i < this.nameArray.length; i++) {
+            let img = document.createElement("img");
             img.setAttribute("style", "position:absolute; top:0px; left:0px; !important");
             img.style.visibility = "hidden";
             img.setAttribute("src", chrome.extension.getURL("img/" + this.nameArray[i] + ".png"));
@@ -70,20 +70,66 @@ var Oneko = (function () {
         this.isMouseOutofDocument = false;
     };
     Oneko.prototype.mainLoop = function () {
-        var _this = this;
+        console.log("main loop");
+        let _this = this;
         this.canOccerMouseMove = false;
         this.currentDistance = Math.sqrt(Math.pow(this.targetX - this.imgX, 2) + Math.pow(this.targetY - this.imgY, 2));
-        var arrowX = this.targetX - this.imgX;
-        var arrowY = this.targetY - this.imgY;
+        let arrowX = this.targetX - this.imgX;
+        let arrowY = this.targetY - this.imgY;
         this.dx = this.dr * (this.targetX - this.imgX) / this.currentDistance;
-        this.dy = this.dr * (this.targetY - this.imgY) / this.currentDistance;
-        this.isNextPointOutofDocument = (this.imgX + this.dx) < 0 || (this.imgX + this.dx) > window.innerWidth || (this.imgY + this.dy) < 0 || (this.imgX + this.dy) > window.innerHeight;
+            this.dy = this.dr * (this.targetY - this.imgY) / this.currentDistance;
+            this.isNextPointOutofDocument = (this.imgX + this.dx) < 0 || (this.imgX + this.dx) > window.innerWidth || (this.imgY + this.dy) < 0 || (this.imgX + this.dy) > window.innerHeight;
+            
+        console.log(this.mouseX,window.scrollX,this.mouseY,window.scrollY,this.mouseY-window.scrollY-window.innerHeight);
         if (this.currentDistance < this.minDistance) {
-            console.log("tikai");
+            //console.log("tikai");
+            //近いなら動かない
             this.dx = 0;
             this.dy = 0;
-            if (!this.isMouseOutofDocument) {
-                //マウスがブラウザ内にあってカーソルとの距離が近い
+            if (this.isMouseOutofDocument&&(Math.abs(this.mouseX-window.scrollX)<50||Math.abs(this.mouseY-window.scrollY)<50||
+            Math.abs(this.mouseY-window.scrollY-window.innerHeight)<50||Math.abs(this.mouseX-window.scrollX-window.innerWidth)<50)) {
+                //マウスがウィンドウの外にあり、かつカーソルが今指している位置（カーソルがウィンドウの外に出る直前に居た位置）と猫の位置が近い
+                //四隅のどれに近いか
+                let arr = [this.imgY - window.scrollY,
+                    this.imgX - window.scrollX,
+                    window.innerHeight - (32 + window.innerHeight - document.documentElement.clientHeight) - (this.imgY - window.scrollY),
+                    document.body.clientWidth - (32 + document.documentElement.clientWidth - document.body.clientWidth) - (this.imgX - window.scrollX)];
+                    //console.log(arr);
+                    switch (arr.indexOf(Math.min.apply(null, arr))) {
+                        case 0:
+                            this.display("utogi");
+                            if (Math.min.apply(null, arr) != 0) {
+                                this.dx = 0;
+                                this.dy = -arr[0];
+                            }
+                            break;
+                        case 1:
+                            this.display("ltogi");
+                            if (Math.min.apply(null, arr) != 0) {
+                                this.dx = -arr[1];
+                                this.dy = 0;
+                            }
+                            break;
+                        case 2:
+                            this.display("dtogi");
+                            if (Math.min.apply(null, arr) != 0) {
+                                this.dx = 0;
+                                this.dy = arr[2];
+                            }
+                            break;
+                        case 3:
+                            this.display("rtogi");
+                            if (Math.min.apply(null, arr) != 0) {
+                                this.dx = arr[3];
+                                this.dy = 0;
+                            }
+                            break;
+                        default:
+                            console.log("togi error");
+                    }
+                    this.counter=0;
+            } else {
+                //カーソルとの距離が近くてカーソルがブラウザの外に出てるか
                 //猫は動かずdx,dy=0
                 this.counter++;
                 if (this.counter < 10) {
@@ -92,49 +138,10 @@ var Oneko = (function () {
                 else {
                     this.display("sleep");
                 }
-            } else {
-                //マウスがウィンドウの外にあり、かつカーソルが今指している位置（カーソルがウィンドウの外に出る直前に居た位置）と猫の位置が近い
-                var arr = [this.imgY - window.scrollY,
-                this.imgX - window.scrollX,
-                window.innerHeight - (32 + window.innerHeight - document.documentElement.clientHeight) - (this.imgY - window.scrollY),
-                document.body.clientWidth - (32 + document.documentElement.clientWidth - document.body.clientWidth) - (this.imgX - window.scrollX)];
-                console.log(arr);
-                switch (arr.indexOf(Math.min.apply(null, arr))) {
-                    case 0:
-                        this.display("utogi");
-                        if (Math.min.apply(null, arr) != 0) {
-                            this.dx = 0;
-                            this.dy = -arr[0];
-                        }
-                        break;
-                    case 1:
-                        this.display("ltogi");
-                        if (Math.min.apply(null, arr) != 0) {
-                            this.dx = -arr[1];
-                            this.dy = 0;
-                        }
-                        break;
-                    case 2:
-                        this.display("dtogi");
-                        if (Math.min.apply(null, arr) != 0) {
-                            this.dx = 0;
-                            this.dy = arr[2];
-                        }
-                        break;
-                    case 3:
-                        this.display("rtogi");
-                        if (Math.min.apply(null, arr) != 0) {
-                            this.dx = arr[3];
-                            this.dy = 0;
-                        }
-                        break;
-                    default:
-                        console.log("togi error");
-                }
             }
         } else {
-            console.log("tooi");
-            var theta = Math.atan2(this.dx, this.dy);
+            //console.log("tooi");
+            let theta = Math.atan2(this.dx, this.dy);
             if ((-Math.PI <= theta && theta <= -Math.PI * 7 / 8) || (Math.PI * 7 / 8 < theta && theta <= Math.PI)) {
                 this.display("up");
             } else if (-Math.PI * 7 / 8 <= theta && theta < -Math.PI * 5 / 8) {
@@ -152,16 +159,15 @@ var Oneko = (function () {
             } else {
                 this.display("upright");
             }
-
-
+            this.counter=0;
         }
         this.imgX = this.imgX + this.dx;
         this.imgY = this.imgY + this.dy;
         if (this.imgX < window.scrollX) {
-            console.log("too min");
+            //console.log("too min");
             this.imgX = window.scrollX;
         } else if (window.scrollX + document.body.clientWidth - 32 < this.imgX) {
-            console.log("too many");
+            //console.log("too many");
             this.imgX = window.scrollX + document.body.clientWidth - 32;
         }
         if (this.imgY < window.scrollY) {
@@ -169,7 +175,7 @@ var Oneko = (function () {
         } else if (window.scrollY + document.documentElement.clientHeight - 32 < this.imgY) {
             this.imgY = window.scrollY + document.documentElement.clientHeight - 32;
         }
-        console.log("imgX", this.imgX, this.imgY);
+        //console.log("imgX", this.imgX, this.imgY);
         this.divStyle.left = this.imgX + "px";
         this.divStyle.top = this.imgY + "px";
         this.canOccerMouseMove = true;
@@ -177,16 +183,16 @@ var Oneko = (function () {
     };
 
     Oneko.prototype.display = function (name) {
-        console.log(name);
+        //console.log(name);
         if (this.currentImg == 2) {
             this.currentImg = 1;
         }
         else {
             this.currentImg = 2;
         }
-        var index = this.nameArray.indexOf(name + this.currentImg);
+        let index = this.nameArray.indexOf(name + this.currentImg);
         //console.log(name);
-        for (var i = 0; i < this.nameArray.length; i++) {
+        for (let i = 0; i < this.nameArray.length; i++) {
             if (i == index) {
                 this.imgStyleArray[i].visibility = "visible";
             }
@@ -198,11 +204,11 @@ var Oneko = (function () {
     return Oneko;
 }());
 
-var mainloop_chromeNeko = function () {
-    var oneko = new Oneko("white", 1);
-    var mouseMoveHandler = oneko.mouseMove.bind(oneko);
-    var mouseLeaveHandler = oneko.mouseLeave.bind(oneko);
-    var mouseEnterHandler = oneko.mouseEnter.bind(oneko);
+let mainloop_chromeNeko = function () {
+    let oneko = new Oneko("white", 1);
+    let mouseMoveHandler = oneko.mouseMove.bind(oneko);
+    let mouseLeaveHandler = oneko.mouseLeave.bind(oneko);
+    let mouseEnterHandler = oneko.mouseEnter.bind(oneko);
     document.addEventListener("mousemove", mouseMoveHandler);
     document.addEventListener("mouseleave", mouseLeaveHandler);
     document.addEventListener("mouseenter", mouseEnterHandler);
@@ -210,16 +216,21 @@ var mainloop_chromeNeko = function () {
 };
 
 chrome.storage.sync.get(["urlArray"], function (a) {
-    var urlArray = a.urlArray;
-    var currentUrl_chromeNeko = location.href;
-    var canMainLoop = true;
+    let urlArray = a.urlArray;
+    let currentUrl_chromeNeko = location.href;
+    let canMainLoop = true;
+    if(urlArray===undefined){
+        mainloop_chromeNeko();
+        return;
+    }
     urlArray.forEach(function (element) {
-        var re_chromeNeko = new RegExp("^https?://"+element.replace(/\*/g, ".*")+"$");
-        console.log(re_chromeNeko);
-        console.log(currentUrl_chromeNeko, element, currentUrl_chromeNeko.match(re_chromeNeko));
+        let re_chromeNeko = new RegExp("^https?://"+element.replace(/\*/g, ".*")+"$");
+        //console.log(re_chromeNeko);
+        //console.log(currentUrl_chromeNeko, element, currentUrl_chromeNeko.match(re_chromeNeko));
         canMainLoop = canMainLoop && !currentUrl_chromeNeko.match(re_chromeNeko);
-        console.log(canMainLoop);
+        //console.log(canMainLoop);
     }, this);
     if(canMainLoop) mainloop_chromeNeko();
+    return;
 });
 

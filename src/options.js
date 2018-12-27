@@ -3,11 +3,12 @@ var input = document.getElementById("input");
 var urlArray = [];
 function load() {
     chrome.storage.sync.get("urlArray", function (s) {
-        urlArray = s.urlArray;
         console.log("load ", s);
-        if (s == null) {
+        if (Object.keys(s).length==0) {
             chrome.storage.sync.set({ "urlArray": [] }, function () { });
+            return;
         }
+        urlArray = s.urlArray;
         for (var i = 0; i < s.urlArray.length; i++) {
             var url = s.urlArray[i];
             var urlElement = document.createElement("option");
@@ -16,7 +17,6 @@ function load() {
             select.appendChild(urlElement);
         }
     });
-
     document.getElementById("add").addEventListener("click", add);
     document.getElementById("remove").addEventListener("click", remove);
 }
